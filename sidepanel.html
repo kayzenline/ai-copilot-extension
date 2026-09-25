@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="sidepanel.css" />
+    <link rel="stylesheet" href="/src/styles/sidepanel.css" />
   </head>
   <body>
     <!-- ===== Header ===== -->
@@ -358,6 +358,10 @@
                 placeholder="gemini-2.5-flash"
               />
             </div>
+            <button id="btn-test-connection" class="secondary-btn" style="margin-top: 10px;">
+              Test Connection
+            </button>
+            <div id="connection-status" class="status-banner hidden" style="margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 12px; line-height: 1.4;"></div>
           </div>
           <!-- Ghost Persona -->
           <div class="settings-section">
@@ -408,6 +412,6 @@
       </div>
     </div>
 
-    <script src="sidepanel.js"></script>
+    <script type="module" src="/src/sidepanel/sidepanel.ts"></script>
   </body>
 </html>

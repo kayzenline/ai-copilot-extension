@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    name: Build & Test Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check (TypeScript)
+        run: npm run check
+
+      - name: Run Vitest Unit Tests
+        run: npm test
+
+      - name: Build Extension (Vite)
+        run: npm run build
+
+      - name: Verify Build Artifacts
+        run: |
+          test -f dist/manifest.json || (echo "dist/manifest.json missing" && exit 1)
+          test -f dist/sidepanel.html || (echo "dist/sidepanel.html missing" && exit 1)
+          test -f dist/background.js || (echo "dist/background.js missing" && exit 1)
+          echo "Build verification successful!"
+
+      - name: Create Extension Release Zip
+        run: |
+          cd dist
+          zip -r ../ai-copilot-extension.zip .
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-copilot-extension-zip
+          path: ai-copilot-extension.zip
+          retention-days: 14

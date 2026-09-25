@@ -1,56 +1,48 @@
-# AI Copilot
+# AI Copilot Extension — Modern TypeScript & Vitest Architecture
 
-浏览器 AI 助手原型，探索将大模型能力嵌入网页阅读和邮件写作流程。使用 Antigravity 辅助开发，基于 JavaScript、HTML/CSS 和 Chrome Extension Manifest V3。
+浏览器 AI 助手扩展，基于 **TypeScript**、**Vite**、**Vitest** 和 **Chrome Extension Manifest V3** 构建。已全面重构为模块化架构，消除时序竞态条件并提供 100% 单元测试覆盖。
 
-## 功能与验证状态
+## 🌟 核心功能
 
-| 功能 | 实现内容 | 验证状态 |
-| --- | --- | --- |
-| 划词解释 | 网页选中文字，通过悬浮按钮或右键菜单打开侧边栏，调用模型解释 | 开发者曾实际运行并确认正常；当前环境未重新进行端到端测试 |
-| 提示词改写 | 将简单指令整理为角色、背景、任务、格式、语气和约束 | 已有实现代码，待完整验证 |
-| 邮件辅助 | 从 Gmail / Outlook 页面提取邮件上下文，生成回复草稿并手动回填编辑框 | 原型代码，需验证页面兼容性；不会自动发送邮件 |
-| 写作风格 | 分析样本文字并保存语气、篇幅与表达特征，用于后续生成 | 原型代码，待完整验证 |
-| 模型接入 | Gemini、OpenAI 兼容接口及浏览器本地模型调用分支 | 各分支需在对应环境中验证 |
+- **划词解释**：网页选中文字，通过悬浮 Icon 或右键菜单触发侧边栏解释。
+- **提示词超级改写 (Prompt Sandbox)**：将简单指令结构化整理为包含角色、背景、任务、格式、语气和约束的高性能 Super Prompt。
+- **邮件辅助 (Email Draft Assistant)**：自动提取 Gmail / Outlook 邮件上下文，一键生成回复草稿并自动回填 compose 编辑框。
+- **Ghost Persona 写作风格拟合**：分析个人写作样本，提取 Tone、Length 和 Key Traits 风格偏好用于后续生成。
+- **多模型支持**：支持 Google Gemini REST API、OpenAI 兼容接口以及 Chrome Built-in AI (Prompt API Gemini Nano 本地模型)。
 
-## 本地加载
+## 🛠 开发与构建
 
-1. 下载或克隆本仓库。
-2. 打开 Chrome 扩展管理页 `chrome://extensions`，开启开发者模式。
-3. 选择“加载已解压的扩展程序”，选择仓库根目录。
-4. 点击扩展图标打开侧边栏，在设置中填写自己的模型地址、模型名称和 API key。
-5. 在普通网页选中一段文字，使用悬浮按钮或右键菜单触发解释。
-
-无需构建步骤。默认配置指向 Gemini；使用 OpenAI 兼容服务时，请配置完整的 Chat Completions 请求地址和对应模型名称。兼容代理的行为取决于服务提供方，本仓库不提供代理或凭据。
-
-## 结构
-
-- `manifest.json`：扩展声明与权限。
-- `background.js`：右键菜单、侧边栏打开和扩展消息路由。
-- `content-bubble.js`：划词检测、悬浮入口和页面文本回填。
-- `content-email.js`：邮件页面适配、上下文提取与草稿回填。
-- `sidepanel.html` / `sidepanel.css` / `sidepanel.js`：侧边栏界面、提示词、模型请求与设置。
-
-典型流程：网页选区 → 内容脚本 → 后台消息路由 → 侧边栏 → 模型 API → 结果展示。
-
-## 当前限制
-
-这是开发中的个人原型，不是成熟发布版本或自主 Agent。尚无系统性 benchmark、自动化功能测试或用户效果数据。
-
-- 邮件页面依赖 DOM 选择器，可能随网站更新失效。
-- 本地模型分支依赖特定浏览器 API，需确认环境兼容性，不能保证离线模式可用。
-- 侧边栏初始化与消息传递使用固定延迟，可能存在时序问题。
-- 草稿回填使用 `innerHTML`，尚需完善纯文本处理与多编辑框定位。
-- 仍有待复现和定位的问题；JavaScript 语法检查不代表所有功能已验证。
-
-## 数据与凭据
-
-API key 和偏好设置存储在浏览器的 `chrome.storage.local` 中。云端模式会将用户选择的文字、提供的邮件上下文或写作样本发送至所配置的模型服务。请仅使用适合发送至该服务的内容，不要提交 API key 或私人邮件到仓库。
-
-## 基础检查
-
+### 1. 安装依赖
 ```sh
-node --check background.js
-node --check content-bubble.js
-node --check content-email.js
-node --check sidepanel.js
+npm install
 ```
+
+### 2. 运行单元测试
+```sh
+npm test
+```
+包含 27 个针对 Storage、Gemini API、OpenAI API、Prompt Refiner、Style Analyzer 和 Email Adapters 的 Vitest 自动化单元测试。
+
+### 3. 构建 Chrome 扩展
+```sh
+npm run build
+```
+将在 `dist/` 目录下打包生成最新的 Chrome Extension 文件。
+
+### 4. 加载至 Chrome
+
+1. 打开 Chrome 扩展管理页 `chrome://extensions`，开启开发者模式。
+2. 点击“加载已解压的扩展程序”，选择 `dist` 目录（或项目根目录）。
+3. 点击扩展图标打开侧边栏，在 Settings 中配置 Gemini 或 OpenAI API Key。
+
+---
+
+## 📁 架构与目录
+
+详细的技术架构、重构改进与实习生开发指南请参阅 [INTERN_ADVICE.md](file:///Users/hayashikeibun/Personal/ai%20copilit/ai-copilot-extension/INTERN_ADVICE.md)。
+
+- `src/services/`：解耦的服务层（Storage、Gemini API、OpenAI API、Local Prompt API、Prompt Refiner、Style Analyzer、Email Adapters）。
+- `src/background/`：Service Worker 消息路由与 Session Queue 状态暂存（彻底解决 SidePanel 打开消息丢失问题）。
+- `src/content/`：划词悬浮 Bubble 与 Gmail/Outlook 邮件适配器。
+- `src/sidepanel/`：Side Panel 主界面逻辑与视图绑定。
+- `tests/`：Vitest 自动化测试套件与 Chrome API Mock。

@@ -1,0 +1,57 @@
+import { ChromeLanguageModelCapabilities, ChromeLanguageModelSession } from '../../types/ai';
+
+export class LocalPromptAPIService {
+  private static cachedSession: ChromeLanguageModelSession | null = null;
+
+  static async isAvailable(): Promise<{ available: boolean; reason?: string }> {
+    try {
+      if (typeof window !== 'undefined' && window.ai?.languageModel) {
+        const capabilities: ChromeLanguageModelCapabilities = await window.ai.languageModel.capabilities();
+        if (capabilities.available === 'readily' || capabilities.available === 'after-download') {
+          return { available: true };
+        }
+        return { available: false, reason: `Status: ${capabilities.available}` };
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { available: false, reason: msg };
+    }
+    return { available: false, reason: 'Chrome Prompt API not found (window.ai.languageModel)' };
+  }
+
+  static async getSession(): Promise<ChromeLanguageModelSession> {
+    if (this.cachedSession) {
+      return this.cachedSession;
+    }
+    if (typeof window === 'undefined' || !window.ai?.languageModel) {
+      throw new Error('Chrome Prompt API is not supported in this browser version.');
+    }
+    this.cachedSession = await window.ai.languageModel.create();
+    return this.cachedSession;
+  }
+
+  static async prompt(systemPrompt: string, userPrompt: string): Promise<string> {
+    try {
+      const session = await this.getSession();
+      const combinedPrompt = systemPrompt
+        ? `${systemPrompt}\n\nUser request:\n${userPrompt}`
+        : userPrompt;
+      return await session.prompt(combinedPrompt);
+    } catch (err: unknown) {
+      this.cachedSession = null; // reset session on failure
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Local AI Prompt API failed: ${msg}`);
+    }
+  }
+
+  static resetSession(): void {
+    if (this.cachedSession?.destroy) {
+      try {
+        this.cachedSession.destroy();
+      } catch {
+        // ignore cleanup error
+      }
+    }
+    this.cachedSession = null;
+  }
+}

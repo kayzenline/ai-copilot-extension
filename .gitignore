@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.zip
+
+# Test coverage
+coverage/
+
+# IDE & OS files
+.DS_Store
+*.log
