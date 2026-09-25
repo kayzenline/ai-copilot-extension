@@ -1,38 +1,49 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import fs from 'fs-extra';
-import path from 'path';
 
-// Plugin to copy manifest.json and icons directory to dist
+// Plugin to copy assets and copy built outputs back to root for dual compatibility
 function copyExtensionAssets() {
   return {
     name: 'copy-extension-assets',
     closeBundle() {
-      const distDir = resolve(__dirname, 'dist');
+      const rootDir = __dirname;
+      const distDir = resolve(rootDir, 'dist');
       
-      // Ensure icons are copied to dist/icons
-      const iconsSrc = fs.existsSync(resolve(__dirname, 'public/icons')) 
-        ? resolve(__dirname, 'public/icons')
-        : resolve(__dirname, 'icon');
+      // 1. Copy icons to dist/icons
+      const iconsSrc = fs.existsSync(resolve(rootDir, 'public/icons')) 
+        ? resolve(rootDir, 'public/icons')
+        : resolve(rootDir, 'icons');
       
       if (fs.existsSync(iconsSrc)) {
         fs.copySync(iconsSrc, resolve(distDir, 'icons'));
       }
 
-      // Copy manifest.json to dist
-      const manifestSrc = resolve(__dirname, 'manifest.json');
+      // 2. Copy manifest.json to dist
+      const manifestSrc = resolve(rootDir, 'manifest.json');
       if (fs.existsSync(manifestSrc)) {
         fs.copySync(manifestSrc, resolve(distDir, 'manifest.json'));
       }
 
-      // Copy CSS files to dist root for content scripts if referenced separately
-      const stylesSrc = resolve(__dirname, 'src/styles');
+      // 3. Copy CSS files to dist root
+      const stylesSrc = resolve(rootDir, 'src/styles');
       if (fs.existsSync(stylesSrc)) {
         const files = fs.readdirSync(stylesSrc);
         for (const file of files) {
           if (file.endsWith('.css')) {
             fs.copySync(resolve(stylesSrc, file), resolve(distDir, file));
+            // Also copy to root for root directory extension loading
+            fs.copySync(resolve(stylesSrc, file), resolve(rootDir, file));
           }
+        }
+      }
+
+      // 4. Copy generated root entry JS files back to root directory so loading root directory works out of the box
+      const entryFiles = ['background.js', 'content-bubble.js', 'content-email.js'];
+      for (const file of entryFiles) {
+        const distFile = resolve(distDir, file);
+        if (fs.existsSync(distFile)) {
+          fs.copySync(distFile, resolve(rootDir, file));
         }
       }
     }
